@@ -8,21 +8,13 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UITableViewController {
 
-    @IBOutlet weak var label: UILabel?
-    var index: Int = 0 {
-        
-        didSet {
-            
-            self.label?.text = "Page \(self.index)"
-        }
-    }
+    var index: Int = 0
     
     override func viewDidLoad() {
         
         super.viewDidLoad()
-        self.label?.text = "Page \(self.index)"
         println("viewDidLoad: \(self.index)")
     }
     

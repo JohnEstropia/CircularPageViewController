@@ -161,26 +161,30 @@ public class CircularPageViewController: UIViewController {
             let viewBounds = view.bounds
             let viewFrame = view.frame
             let scrollViewBounds = pagingScrollView.bounds
+            let scrollViewInsets = pagingScrollView.contentInset
+            let currentIndex = self.currentIndex
             
             let setViewControllerFrame = { (viewController: UIViewController, index: Int) -> Void in
                 
                 let pageView = viewController.view
                 let expectedFrame = CGRect(
                     x: round(CGFloat(index) * viewBounds.width),
-                    y: scrollViewBounds.minY,
+                    y: 0.0,
                     width: viewBounds.width,
-                    height: scrollViewBounds.height
+                    height: scrollViewBounds.height - scrollViewInsets.top - scrollViewInsets.bottom
                 )
                 if pageView.frame != expectedFrame {
                     
                     pageView.frame = expectedFrame
                 }
+                pageView.userInteractionEnabled = currentIndex == index
             }
             let removeViewController = { (viewController: UIViewController) -> Void in
                 
                 viewController.willMoveToParentViewController(nil)
                 viewController.view.removeFromSuperview()
                 viewController.removeFromParentViewController()
+                viewController.view.userInteractionEnabled = true
             }
             
             let viewControllers = self.viewControllers

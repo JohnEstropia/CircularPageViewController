@@ -37,7 +37,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let storyboad = UIStoryboard(name: "Main", bundle: nil)
         
         var viewControllers = [UIViewController]()
-        let randomCount = Int(arc4random_uniform(10)) % 10
+        let randomCount = Int(arc4random_uniform(10))
         for var index = 0; index < randomCount; ++index {
             
             let viewController = storyboad.instantiateInitialViewController() as! ViewController
@@ -52,6 +52,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             viewControllers.append(viewController)
         }
         self.pageController?.viewControllers = viewControllers
+        self.pageController?.navigationItem.title = "\(viewControllers.count) page(s)"
     }
 }
 

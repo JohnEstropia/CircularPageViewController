@@ -10,16 +10,44 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    @IBOutlet weak var label: UILabel?
+    var index: Int = 0 {
+        
+        didSet {
+            
+            self.label?.text = "Page \(self.index)"
+        }
+    }
+    
     override func viewDidLoad() {
+        
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        self.label?.text = "Page \(self.index)"
+        println("viewDidLoad: \(self.index)")
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    
+    override func viewWillAppear(animated: Bool) {
+        
+        super.viewWillAppear(animated)
+        println("viewWillAppear: \(self.index)")
     }
-
-
+    
+    override func viewDidAppear(animated: Bool) {
+        
+        super.viewDidAppear(animated)
+        println("viewDidAppear: \(self.index)")
+    }
+    
+    override func viewWillDisappear(animated: Bool) {
+        
+        super.viewWillDisappear(animated)
+        println("viewWillDisappear: \(self.index)")
+    }
+    
+    override func viewDidDisappear(animated: Bool) {
+        
+        super.viewDidDisappear(animated)
+        println("viewDidDisappear: \(self.index)")
+    }
 }
 

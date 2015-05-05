@@ -13,6 +13,7 @@
 		B5FD368E1AF85BA400483E2B /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B5FD368D1AF85BA400483E2B /* Images.xcassets */; };
 		B5FD36911AF85BA400483E2B /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = B5FD368F1AF85BA400483E2B /* LaunchScreen.xib */; };
 		B5FD369D1AF85BA400483E2B /* CircularPageViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5FD369C1AF85BA400483E2B /* CircularPageViewControllerTests.swift */; };
+		B5FD36A81AF85BD500483E2B /* CircularPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5FD36A71AF85BD500483E2B /* CircularPageViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,6 +37,7 @@
 		B5FD36961AF85BA400483E2B /* CircularPageViewControllerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CircularPageViewControllerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B5FD369B1AF85BA400483E2B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B5FD369C1AF85BA400483E2B /* CircularPageViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularPageViewControllerTests.swift; sourceTree = "<group>"; };
+		B5FD36A71AF85BD500483E2B /* CircularPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircularPageViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +79,7 @@
 		B5FD36831AF85BA400483E2B /* CircularPageViewController */ = {
 			isa = PBXGroup;
 			children = (
+				B5FD36A61AF85BC100483E2B /* Sources */,
 				B5FD36861AF85BA400483E2B /* AppDelegate.swift */,
 				B5FD36881AF85BA400483E2B /* ViewController.swift */,
 				B5FD368A1AF85BA400483E2B /* Main.storyboard */,
@@ -110,6 +113,14 @@
 				B5FD369B1AF85BA400483E2B /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		B5FD36A61AF85BC100483E2B /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				B5FD36A71AF85BD500483E2B /* CircularPageViewController.swift */,
+			);
+			path = Sources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -213,6 +224,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B5FD36891AF85BA400483E2B /* ViewController.swift in Sources */,
+				B5FD36A81AF85BD500483E2B /* CircularPageViewController.swift in Sources */,
 				B5FD36871AF85BA400483E2B /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -43,12 +43,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let viewController = storyboad.instantiateInitialViewController() as! ViewController
             viewController.index = index
             viewController.navigationItem.title = "Page \(index)"
-            viewController.view.backgroundColor = UIColor(
-                red: CGFloat(arc4random_uniform(256)) / 256.0,
-                green: CGFloat(arc4random_uniform(256)) / 256.0,
-                blue: CGFloat(arc4random_uniform(256)) / 256.0,
-                alpha: 1.0
-            )
             viewControllers.append(viewController)
         }
         self.pageController?.viewControllers = viewControllers

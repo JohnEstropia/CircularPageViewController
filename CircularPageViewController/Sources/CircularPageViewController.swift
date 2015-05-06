@@ -31,7 +31,11 @@ import UIKit
 
 public protocol CircularPageViewControllerDelegate: class {
     
-    func pageViewController(controller: CircularPageViewController, didChangeCurrentIndex currentIndex: Int?, viewController: UIViewController?)
+    func pageViewController(
+        controller: CircularPageViewController,
+        didChangeCurrentIndex currentIndex: Int?,
+        viewController: UIViewController?
+    )
 }
 
 
@@ -48,14 +52,30 @@ public class CircularPageViewController: UIViewController {
         
         didSet {
             
-            if self.viewControllers == oldValue {
+            let viewControllers = self.viewControllers
+            if viewControllers == oldValue {
                 
                 return
             }
             
-            self.currentIndex = nil
-            self.view.setNeedsLayout()
-            self.view.layoutIfNeeded()
+            self.repeatedViewControllers = (viewControllers.count < Constants.minimumNumberOfPagesForCircularPaging
+                ? viewControllers
+                : viewControllers + viewControllers + viewControllers)
+            
+            if let previousIndex = self.currentIndex where previousIndex < oldValue.count {
+                
+                self.currentViewController = oldValue[previousIndex]
+            }
+            else {
+                
+                self.currentIndex = nil
+            }
+            
+            if self.isViewLoaded() {
+                
+                self.view.setNeedsLayout()
+                self.view.layoutIfNeeded()
+            }
         }
     }
     
@@ -63,11 +83,11 @@ public class CircularPageViewController: UIViewController {
         
         get {
             
-            return self._currentIndex
+            return self.normalizedIndexForIndex(self.actualIndex)
         }
         set {
             
-            self.setCurrentIndex(newValue, updateOffset: true)
+            self.setActualIndex(self.actualIndexForIndex(newValue), updateOffset: true)
         }
     }
     
@@ -115,6 +135,7 @@ public class CircularPageViewController: UIViewController {
         pagingScrollView.scrollsToTop = false
         pagingScrollView.pagingEnabled = true
         pagingScrollView.alwaysBounceVertical = false
+        pagingScrollView.alwaysBounceHorizontal = true
         pagingScrollView.showsHorizontalScrollIndicator = false
         pagingScrollView.delegate = self
         
@@ -132,25 +153,34 @@ public class CircularPageViewController: UIViewController {
         
         if let pagingScrollView = self.pagingScrollView {
             
-            let viewBounds = self.view.bounds
-            let boundsWidth = viewBounds.width
+            let boundsWidth = self.view.bounds.width
             let numberOfViewControllers = self.viewControllers.count
+            
             pagingScrollView.contentSize = CGSize(
-                width: max(boundsWidth, CGFloat(numberOfViewControllers) * boundsWidth),
+                width: (numberOfViewControllers < Constants.minimumNumberOfPagesForCircularPaging
+                    ? max(boundsWidth, boundsWidth * CGFloat(numberOfViewControllers))
+                    : CGFloat(numberOfViewControllers * 3) * boundsWidth
+                ),
                 height: 1.0
             )
             pagingScrollView.contentOffset = CGPoint(
-                x: CGFloat(self.currentIndex ?? 0) * boundsWidth,
-                y: 0.0
+                x: CGFloat(self.actualIndexForIndex(self.currentIndex)) * self.view.bounds.width,
+                y: pagingScrollView.contentOffset.y
             )
-            pagingScrollView.alwaysBounceHorizontal = numberOfViewControllers <= 1
         }
     }
     
     
     // MARK: Private
     
-    private var _currentIndex: Int?
+    private struct Constants {
+        
+        static let numberOfPagesToPreload = 1
+        static let minimumNumberOfPagesForCircularPaging = 3
+    }
+    
+    private var actualIndex: Int?
+    private var repeatedViewControllers: [UIViewController] = []
     private weak var pagingScrollView: UIScrollView? = nil
     
     private func layoutViewControllers() {
@@ -163,6 +193,7 @@ public class CircularPageViewController: UIViewController {
             let scrollViewBounds = pagingScrollView.bounds
             let scrollViewInsets = pagingScrollView.contentInset
             let currentIndex = self.currentIndex
+            let actualIndex = self.actualIndex
             
             let setViewControllerFrame = { (viewController: UIViewController, index: Int) -> Void in
                 
@@ -174,46 +205,51 @@ public class CircularPageViewController: UIViewController {
                     height: scrollViewBounds.height - scrollViewInsets.top - scrollViewInsets.bottom
                 )
                 if pageView.frame != expectedFrame {
-                    
+                
                     pageView.frame = expectedFrame
                 }
-                pageView.userInteractionEnabled = currentIndex == index
+                pageView.userInteractionEnabled = currentIndex == self.normalizedIndexForIndex(index)
             }
             let removeViewController = { (viewController: UIViewController) -> Void in
                 
+                if viewController.parentViewController != self {
+                    
+                    return
+                }
+                
                 viewController.willMoveToParentViewController(nil)
-                viewController.view.removeFromSuperview()
+                if viewController.isViewLoaded() {
+                    
+                    viewController.view.removeFromSuperview()
+                    viewController.view.userInteractionEnabled = true
+                }
                 viewController.removeFromParentViewController()
-                viewController.view.userInteractionEnabled = true
             }
             
-            let viewControllers = self.viewControllers
+            let repeatedViewControllers = self.repeatedViewControllers
             for childViewController in [UIViewController](self.childViewControllers as! [UIViewController]) {
                 
-                if let indexOfChildViewController = find(viewControllers, childViewController)
-                    where self.isIndexWithinPagingWindow(indexOfChildViewController) {
-                        
-                        setViewControllerFrame(childViewController, indexOfChildViewController)
-                }
-                else {
+                if find(repeatedViewControllers, childViewController) == nil {
                     
                     removeViewController(childViewController)
                 }
             }
             
-            self.enumerateViewControllersForCenterIndex(self.currentIndex) { (index, viewController) -> Void in
+            self.enumerateViewControllersForCenterIndex(actualIndex) { (index, viewController) -> Void in
                 
-                if let indexOfChildViewController = find(self.childViewControllers as! [UIViewController], viewController) {
+                if self.isIndex(index, withinPagingWindowForIndex: actualIndex) {
                     
-                    return
-                }
-                
-                if self.isIndexWithinPagingWindow(index) {
-                    
-                    self.addChildViewController(viewController)
-                    setViewControllerFrame(viewController, index)
-                    pagingScrollView.addSubview(viewController.view)
-                    viewController.didMoveToParentViewController(self)
+                    if let indexOfChildViewController = find(self.childViewControllers as! [UIViewController], viewController) {
+                        
+                        setViewControllerFrame(viewController, index)
+                    }
+                    else {
+                        
+                        self.addChildViewController(viewController)
+                        setViewControllerFrame(viewController, index)
+                        pagingScrollView.addSubview(viewController.view)
+                        viewController.didMoveToParentViewController(self)
+                    }
                 }
                 else {
                     
@@ -223,21 +259,16 @@ public class CircularPageViewController: UIViewController {
         }
     }
     
-    private struct Constants {
+    private func isIndex(index: Int, withinPagingWindowForIndex centerIndex: Int?) -> Bool {
         
-        static let numberOfPagesToPreload = 1
-    }
-    
-    private func isIndexWithinPagingWindow(index: Int) -> Bool {
-        
-        if let currentIndex = self.currentIndex {
+        if let centerIndex = centerIndex {
             
             switch index {
                 
-            case Int.min ..< 0, self.viewControllers.count ..< Int.max:
+            case Int.min ..< 0, self.repeatedViewControllers.count ..< Int.max:
                 return false
                 
-            case (currentIndex - Constants.numberOfPagesToPreload) ... (currentIndex + Constants.numberOfPagesToPreload):
+            case (centerIndex - Constants.numberOfPagesToPreload) ... (centerIndex + Constants.numberOfPagesToPreload):
                 return true
                 
             default:
@@ -247,18 +278,26 @@ public class CircularPageViewController: UIViewController {
         return false
     }
     
-    private func enumerateViewControllersForCenterIndex(centerIndex: Int?, closure: (index: Int, viewController: UIViewController) -> Void) {
+    private func enumerateViewControllersForCenterIndex(centerIndex: Int?, closure: (actualIndex: Int, viewController: UIViewController) -> Void) {
         
         if let centerIndex = centerIndex {
             
-            let viewControllers = self.viewControllers
-            let numberOfViewControllers = viewControllers.count
+            var reportedViewControllers = Set<UIViewController>()
+            let repeatedViewControllers = self.repeatedViewControllers
+            let numberOfViewControllers = repeatedViewControllers.count
             
-            let executeClosureIfNeeded = { (index: Int) -> Void in
+            let executeClosureIfNeeded = { (actualIndex: Int) -> Void in
                 
-                if index >= 0 && index < numberOfViewControllers {
+                if actualIndex >= 0 && actualIndex < numberOfViewControllers {
                     
-                    closure(index: index, viewController: viewControllers[index])
+                    let viewController = repeatedViewControllers[actualIndex]
+                    if reportedViewControllers.contains(viewController) {
+                        
+                        return
+                    }
+                    
+                    closure(actualIndex: actualIndex, viewController: viewController)
+                    reportedViewControllers.insert(viewController)
                 }
             }
             
@@ -280,9 +319,9 @@ public class CircularPageViewController: UIViewController {
         }
         else {
             
-            for (index, viewController) in enumerate(self.viewControllers) {
+            for (actualIndex, viewController) in enumerate(self.repeatedViewControllers) {
                 
-                closure(index: index, viewController: viewController)
+                closure(actualIndex: actualIndex, viewController: viewController)
             }
         }
     }
@@ -297,60 +336,66 @@ public class CircularPageViewController: UIViewController {
         )
     }
     
-    private func setCurrentIndex(newValue: Int?, updateOffset: Bool) {
+    private func setActualIndex(newValue: Int?, updateOffset: Bool) {
         
-        let previousIndex = self._currentIndex
+        let previousIndex = self.actualIndex
         let previousViewController = self.currentViewController
-        if let newValue = newValue {
+        if self.repeatedViewControllers.count > 0 {
             
-            let numberOfPages = self.viewControllers.count
-            if numberOfPages > 0 {
+            if let newValue = newValue where newValue >= 0 && newValue < self.repeatedViewControllers.count {
                 
-                if newValue < 0 {
-                    
-                    self._currentIndex = 0
-                }
-                else if newValue >= numberOfPages {
-                    
-                    self._currentIndex = numberOfPages - 1
-                }
-                else {
-                    
-                    self._currentIndex = newValue
-                }
+                self.actualIndex = newValue
             }
             else {
                 
-                self._currentIndex = nil
+                self.actualIndex = self.actualIndexForIndex(0)
             }
-        }
-        else if self.viewControllers.count > 0 {
-            
-            self._currentIndex = previousIndex ?? 0
         }
         else {
             
-            self._currentIndex = newValue
+            self.actualIndex = nil
         }
         
         self.layoutViewControllers()
         
-        let currentIndex = self._currentIndex
         if let pagingScrollView = self.pagingScrollView where updateOffset {
             
             pagingScrollView.delegate = nil
             pagingScrollView.contentOffset = CGPoint(
-                x: CGFloat(currentIndex ?? 0) * self.view.bounds.width,
+                x: CGFloat(self.actualIndex ?? 0) * self.view.bounds.width,
                 y: pagingScrollView.contentOffset.y
             )
             pagingScrollView.delegate = self
         }
         
-        if previousIndex != currentIndex || self.currentViewController != previousViewController {
+        if self.normalizedIndexForIndex(previousIndex) != self.currentIndex || self.currentViewController != previousViewController {
             
             self.didChangeCurrentIndex()
-            println("currentIndex: \(self._currentIndex)")
         }
+    }
+    
+    private func normalizedIndexForIndex(index: Int?) -> Int? {
+        
+        let numberOfViewControllers = self.viewControllers.count
+        if let actualIndex = index where numberOfViewControllers > 0 {
+            
+            return actualIndex % numberOfViewControllers
+        }
+        return nil
+    }
+    
+    private func actualIndexForIndex(index: Int?) -> Int {
+        
+        let numberOfViewControllers = self.viewControllers.count
+        if numberOfViewControllers > 0 {
+            
+            let normalizedIndex = (index ?? 0) % numberOfViewControllers
+            return (numberOfViewControllers < Constants.minimumNumberOfPagesForCircularPaging
+                ? normalizedIndex
+                : normalizedIndex + numberOfViewControllers
+            )
+        }
+        return 0
     }
 }
 
@@ -363,6 +408,20 @@ extension CircularPageViewController: UIScrollViewDelegate {
         
         let pageWidth = self.view.frame.width
         let currentIndex = Int(floor((scrollView.contentOffset.x - (pageWidth / 2.0)) / pageWidth) + 1.0)
-        self.setCurrentIndex(currentIndex, updateOffset: false)
+        self.setActualIndex(currentIndex, updateOffset: false)
+    }
+    
+    public func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+        
+        let pageWidth = self.view.frame.width
+        let currentIndex = Int(floor((scrollView.contentOffset.x - (pageWidth / 2.0)) / pageWidth) + 1.0)
+        self.setActualIndex(self.actualIndexForIndex(currentIndex), updateOffset: true)
+    }
+    
+    public func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
+        
+        let pageWidth = self.view.frame.width
+        let currentIndex = Int(floor((scrollView.contentOffset.x - (pageWidth / 2.0)) / pageWidth) + 1.0)
+        self.setActualIndex(self.actualIndexForIndex(currentIndex), updateOffset: true)
     }
 }

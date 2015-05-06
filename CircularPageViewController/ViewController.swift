@@ -15,6 +15,13 @@ class ViewController: UITableViewController {
     override func viewDidLoad() {
         
         super.viewDidLoad()
+        
+        self.view.backgroundColor = UIColor(
+            red: CGFloat(arc4random_uniform(255)) / 255.0,
+            green: CGFloat(arc4random_uniform(255)) / 255.0,
+            blue: CGFloat(arc4random_uniform(255)) / 255.0,
+            alpha: 1.0
+        )
         println("viewDidLoad: \(self.index)")
     }
     
@@ -40,6 +47,13 @@ class ViewController: UITableViewController {
         
         super.viewDidDisappear(animated)
         println("viewDidDisappear: \(self.index)")
+    }
+    
+    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        
+        let cell = super.tableView(tableView, cellForRowAtIndexPath: indexPath)
+        cell.textLabel?.text = "Page \(self.index), row \(indexPath.row)"
+        return cell
     }
 }
 

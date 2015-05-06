@@ -12,6 +12,11 @@ class ViewController: UITableViewController {
 
     var index: Int = 0
     
+    override var description: String {
+        
+        return "\(super.description)(Page \(self.index))"
+    }
+    
     override func viewDidLoad() {
         
         super.viewDidLoad()

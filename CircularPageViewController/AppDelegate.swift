@@ -9,27 +9,35 @@
 import UIKit
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, CircularPageViewControllerDelegate {
 
     var window: UIWindow?
     var pageController:CircularPageViewController? = nil
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
-        
         let pageController = CircularPageViewController(viewControllers: [])
         pageController.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "reload", style: .Plain, target: self, action: "rightBarButtonItemTapped:")
+        pageController.delegate = self
         
         let window = UIWindow()
         window.frame = UIScreen.mainScreen().bounds
         pageController.view.frame = window.frame;
         window.addSubview(pageController.view)
-        window.rootViewController = UINavigationController(rootViewController: pageController)
+        
+        let tabBarController = UITabBarController()
+        tabBarController.viewControllers = [UINavigationController(rootViewController: pageController)]
+        window.rootViewController = tabBarController
         window.makeKeyAndVisible()
         
         self.window = window
         self.pageController = pageController
         return true
+    }
+    
+    func pageViewController(controller: CircularPageViewController, didChangeCurrentIndex currentIndex: Int?, viewController: UIViewController?) {
+        
+        println("didChangeCurrentIndex: \(currentIndex), viewController: \((viewController))")
     }
 
     dynamic func rightBarButtonItemTapped(sender: AnyObject) {

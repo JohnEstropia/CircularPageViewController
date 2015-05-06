@@ -167,6 +167,7 @@ public class CircularPageViewController: UIViewController {
                 x: CGFloat(self.actualIndexForIndex(self.currentIndex)) * self.view.bounds.width,
                 y: pagingScrollView.contentOffset.y
             )
+            pagingScrollView.bounces = numberOfViewControllers < Constants.minimumNumberOfPagesForCircularPaging
         }
     }
     

@@ -31,11 +31,7 @@ import UIKit
 
 public protocol CircularPageViewControllerDelegate: class {
     
-    func pageViewController(
-        controller: CircularPageViewController,
-        didChangeCurrentIndex currentIndex: Int?,
-        viewController: UIViewController?
-    )
+    func pageViewController(controller: CircularPageViewController, didChangeCurrentIndex currentIndex: Int?, viewController: UIViewController?)
 }
 
 
@@ -137,6 +133,10 @@ public class CircularPageViewController: UIViewController {
         pagingScrollView.alwaysBounceVertical = false
         pagingScrollView.alwaysBounceHorizontal = true
         pagingScrollView.showsHorizontalScrollIndicator = false
+        pagingScrollView.backgroundColor = UIColor.clearColor()
+        pagingScrollView.decelerationRate = UIScrollViewDecelerationRateFast
+        pagingScrollView.multipleTouchEnabled = false
+        pagingScrollView.exclusiveTouch = true
         pagingScrollView.delegate = self
         
         view.addSubview(pagingScrollView)
@@ -206,7 +206,7 @@ public class CircularPageViewController: UIViewController {
                     height: scrollViewBounds.height - scrollViewInsets.top - scrollViewInsets.bottom
                 )
                 if pageView.frame != expectedFrame {
-                
+                    
                     pageView.frame = expectedFrame
                 }
                 pageView.userInteractionEnabled = currentIndex == self.normalizedIndexForIndex(index)
@@ -240,9 +240,10 @@ public class CircularPageViewController: UIViewController {
                 
                 if self.isIndex(index, withinPagingWindowForIndex: actualIndex) {
                     
-                    if let indexOfChildViewController = find(self.childViewControllers as! [UIViewController], viewController) {
+                    if viewController.parentViewController == self {
                         
                         setViewControllerFrame(viewController, index)
+                        viewController.didMoveToParentViewController(self)
                     }
                     else {
                         
